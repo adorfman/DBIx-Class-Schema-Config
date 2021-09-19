@@ -19,17 +19,7 @@ sub connection {
         return $class->next::method( @info );
     }
 
-    my $attrs = $class->_make_connect_attrs(@info);
-
-    # We will not load credentials for someone who uses dbh_maker,
-    # however we will pass their request through.
-    return $class->next::method( $attrs )
-        if defined $attrs->{dbh_maker};
-
-    # Take responsibility for passing through normal-looking
-    # credentials.
-    $attrs = $class->load_credentials($attrs)
-        unless $attrs->{dsn} =~ /^dbi:/i;
+    my $attrs = $class->load_credentials(@info);
 
     return $class->next::method( $attrs );
 }
@@ -107,7 +97,9 @@ sub _load_config {
 
 
 sub load_credentials {
-    my ( $class, $connect_args ) = @_;
+    my ( $class, @info ) = @_;
+
+    my $connect_args = $class->_make_connect_attrs(@info); 
 
     # Handle mojo-like postgres:// urls
     return $class->coerce_credentials_from_mojolike($connect_args)
@@ -116,7 +108,8 @@ sub load_credentials {
     # While ->connect is responsible for returning normal-looking
     # credential information, we do it here as well so that it can be
     # independently unit tested.
-    return $connect_args if $connect_args->{dsn} =~ /^dbi:/i;
+    return $connect_args 
+        if $connect_args->{dsn} =~ /^dbi:/i or defined $connect_args->{dbh_maker};
 
     return $class->filter_loaded_credentials(
         $class->_find_credentials( $connect_args, $class->config ),

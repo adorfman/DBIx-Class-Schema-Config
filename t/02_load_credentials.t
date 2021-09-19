@@ -237,8 +237,7 @@ my $tests = [
 for my $test ( @$tests ) {
     is_deeply( 
         DBIx::Class::Schema::Config->load_credentials( 
-            DBIx::Class::Schema::Config->_make_connect_attrs(
-                ref $test->{put} eq 'ARRAY' ? @{$test->{put}} : $test->{put})
+            ref $test->{put} eq 'ARRAY' ? @{$test->{put}} : $test->{put}
         ), $test->{get}, $test->{title} );
 }
 
